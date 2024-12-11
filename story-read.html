@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kids' Interactive e-Book</title>
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+  >
+  <style>
+    /* General Book Styles */
+#book-container {
+  perspective: 1500px;
+  width: 800px;
+  height: 400px;
+  margin: 20px auto;
+  position: relative;
+}
+
+#book {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+}
+
+/* Spread Layout */
+.spread {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  transform-origin: center;
+  transform-style: preserve-3d;
+  transition: transform 100s ease-in;
+  backface-visibility: hidden;
+}
+
+/* Page Layout */
+.page {
+  flex: 1;
+  height: 100%;
+  padding: 20px;
+  background: #fff;
+  border: 1px solid #ccc;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  position: relative;
+}
+
+.page img {
+  max-width: 80%;
+  height: auto;
+  margin-bottom: 10px;
+}
+
+.page.left {
+  border-right: 1px solid #ddd;
+}
+
+.page.right {
+  border-left: 1px solid #ddd;
+}
+
+/* Flip Effect */
+.spread.hidden {
+  display: none;
+}
+
+.spread.flipped .left {
+  transform: rotateY(-180deg);
+  z-index: 1;
+}
+
+.spread.flipped .right {
+  transform: rotateY(0);
+  z-index: 2;
+}
+
+/* Add Hover Effects */
+.page:hover {
+  box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+  </style>
+  <!-- <link rel="stylesheet" href="assets/css/styles.css"> -->
+</head>
+<body>
+  <div class="container text-center mt-5">
+    <h1 class="mb-4">Kids' Interactive e-Book</h1>
+    <p>Select a book to start reading!</p>
+    <div class="book-selection mb-4">
+      <button class="btn btn-primary book-btn" data-book="0">The Little Red Hen</button>
+      <button class="btn btn-primary book-btn" data-book="1">The Three Little Pigs</button>
+      <button class="btn btn-primary book-btn" data-book="2">Goldilocks</button>
+      <button class="btn btn-primary book-btn" data-book="3">Jack and the Beanstalk</button>
+      <button class="btn btn-primary book-btn" data-book="4">Cinderella</button>
+    </div>
+    <div id="book-container">
+      <div id="book">
+        <!-- Dynamic content for pages will be rendered here -->
+      </div>
+    </div>
+    <div class="mt-4">
+      <button class="btn btn-secondary" id="prev-page">Previous</button>
+      <button class="btn btn-secondary" id="next-page">Next</button>
+      <button class="btn btn-success" id="read-aloud">🔊 Read Aloud</button>
+      <button class="btn btn-danger" id="stop-reading">🔇 Stop</button>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+  <!-- <script src="assets/js/script.js"></script> -->
+   <script>
+// Data for Books with Left and Right Pages
+const books = [
+  [
+    { text: "Once upon a time there was a little red hen who lived with her friends, the cow, the horse, and the cat.", img: "assets/images/red-hen.jpg" },
+    { text: "In the springtime the flowers were blossoming, the leaves were appearing on the trees once more, and the farmers were busy planting their fields.", img: "assets/images/farm.jpg" },
+    { text: "The Little Red Hen found a grain of wheat and asked, 'Who will help me plant this?'", img: "assets/images/red-hen.jpg" },
+    { text: "'Not I,' said the cat. 'Not I,' said the dog. So she planted it herself.", img: "assets/images/farm.jpg" },
+    { text: "Three little pigs built houses of straw, sticks, and bricks.", img: "assets/images/red-hen.jpg" },
+    { text: "The wolf huffed and puffed but couldn’t blow down the brick house.", img: "assets/images/farm.jpg" },
+  ],
+  [
+    { text: "Three little pigs built houses of straw, sticks, and bricks.", img: "images/three-pigs.jpg" },
+    { text: "The wolf huffed and puffed but couldn’t blow down the brick house.", img: "images/brick-house.jpg" },
+  ],
+  [
+    { text: "Goldilocks found a house and tried porridge, chairs, and beds.", img: "images/goldilocks.jpg" },
+    { text: "She ran away when the bears came home and lived happily ever after.", img: "images/three-bears.jpg" },
+  ],
+  [
+    { text: "Jack traded a cow for magic beans and grew a giant beanstalk.", img: "images/beanstalk.jpg" },
+    { text: "He climbed it and found treasures but had to escape the giant.", img: "images/giant.jpg" },
+  ],
+  [
+    { text: "Cinderella's fairy godmother sent her to the ball in a pumpkin carriage.", img: "images/cinderella.jpg" },
+    { text: "She left her slipper behind, and the prince searched for her.", img: "images/glass-slipper.jpg" },
+  ],
+];
+
+let currentBook = 0;
+let currentPage = 0;
+
+// Book Container
+const bookContainer = document.getElementById("book");
+
+// Flipping Sound
+const flipSound = new Audio("assets/sounds/page-flip.mp3");
+
+// Text-to-Speech
+let isSpeaking = false;
+
+// Function to Render Pages
+function renderBook() {
+  bookContainer.innerHTML = "";
+  const book = books[currentBook];
+  
+  // Create pages and displays for left and right
+  const spread = document.createElement("div");
+  spread.classList.add("spread");
+  
+  // Left page content
+  const leftPage = document.createElement("div");
+  leftPage.classList.add("page", "left");
+  leftPage.innerHTML = `
+    <img src="${book[currentPage].img}" alt="Page Image">
+    <p>${book[currentPage].text}</p>
+  `;
+
+  // Right page content (if there's a next page, show the next content)
+  const rightPage = document.createElement("div");
+  rightPage.classList.add("page", "right");
+  const nextPage = book[currentPage + 1] || book[currentPage]; // Handle last page if no next page
+  rightPage.innerHTML = `
+    <img src="${nextPage.img}" alt="Next Page Image">
+    <p>${nextPage.text}</p>
+  `;
+
+  // Append pages to the spread
+  spread.appendChild(leftPage);
+  spread.appendChild(rightPage);
+  bookContainer.appendChild(spread);
+}
+
+// Navigate Pages
+function flipPage(direction) {
+  const spreads = document.querySelectorAll(".spread");
+  const currentSpread = spreads[Math.floor(currentPage / 2)];
+  if (direction === -1 && currentPage > 0) {
+    currentSpread.classList.remove("flipped");
+  } else if (direction === 1 && currentPage < books[currentBook].length - 1) {
+    currentSpread.classList.add("flipped");
+  }
+
+  currentPage += direction * 2; // Move by two pages
+  if (currentPage < 0) currentPage = 0;
+  if (currentPage >= books[currentBook].length) currentPage = books[currentBook].length - 1;
+
+  renderBook(); // Re-render the book to show updated pages
+  flipSound.play();
+}
+
+// Text-to-Speech Functionality
+
+function readAloud() {
+  if (isSpeaking) return;
+
+  const currentText = books[currentBook][currentPage].text;
+  const nextPage = books[currentBook][currentPage + 1];
+  const nextText = nextPage ? nextPage.text : "";
+
+  const utterance = new SpeechSynthesisUtterance(currentText);
+  const utterance1 = new SpeechSynthesisUtterance(nextText);
+  speechSynthesis.speak(utterance);
+  speechSynthesis.speak(utterance1);
+
+  isSpeaking = true;
+  utterance.onend = () => {
+    isSpeaking = false;
+  };
+  utterance1.onend = () => {
+    isSpeaking = false;
+  };
+}
+
+function stopReading() {
+  speechSynthesis.cancel();
+  isSpeaking = false;
+}
+
+// Event Listeners
+document.getElementById("prev-page").addEventListener("click", () => flipPage(-1));
+document.getElementById("next-page").addEventListener("click", () => flipPage(1));
+document.getElementById("read-aloud").addEventListener("click", readAloud);
+document.getElementById("stop-reading").addEventListener("click", stopReading);
+
+document.querySelectorAll(".book-btn").forEach((button) => {
+  button.addEventListener("click", (e) => {
+    currentBook = parseInt(e.target.dataset.book);
+    currentPage = 0;
+    renderBook();
+  });
+});
+
+// Initial Render
+renderBook();
+
+   </script>
+   </body>
+</html>
