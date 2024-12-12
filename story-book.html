@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Story Books</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Arial', sans-serif;
+        }
+
+        .book {
+            perspective: 1500px;
+            margin: 20px auto;
+            width: 600px;
+            height: 400px;
+            position: relative;
+        }
+
+        .page {
+            position: absolute;
+            width: 50%;
+            height: 100%;
+            background: #fff;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            transition: transform 0.6s ease, box-shadow 0.6s ease;
+            transform-origin: left;
+            overflow: hidden;
+            z-index: 10;
+        }
+
+        .page.right {
+            left: 50%;
+            transform-origin: right;
+        }
+
+        .page.flipped {
+            transform: rotateY(-180deg);
+            box-shadow: -5px 5px 15px rgba(0,0,0,0.1);
+            z-index: 5;
+        }
+
+        .page.right.flipped {
+            transform: rotateY(180deg);
+        }
+
+        .book-content {
+            position: relative;
+            height: 100%;
+        }
+
+        .book-content .text {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 20px;
+            word-wrap: break-word;
+            font-size: 18px;
+        }
+
+        .book-nav {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .btn-page {
+            margin: 0 10px;
+        }
+
+        .flipping {
+            animation: flipAnimation 0.6s ease forwards;
+        }
+
+        @keyframes flipAnimation {
+            from {
+                transform: rotateY(0);
+            }
+            to {
+                transform: rotateY(-180deg);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container text-center">
+        <h1 class="my-4">Interactive Story Books</h1>
+
+        <div class="book" id="book">
+            <div class="book-content">
+                <div class="page" id="page-1">
+                    <div class="text"></div>
+                </div>
+                <div class="page right" id="page-2">
+                    <div class="text"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="book-nav">
+            <button class="btn btn-primary btn-page" id="prevBtn">Previous</button>
+            <button class="btn btn-primary btn-page" id="nextBtn">Next</button>
+            <button class="btn btn-secondary btn-page" id="readBtn">Read Aloud</button>
+        </div>
+    </div>
+
+    <script>
+        const books = [
+            [
+                "Once upon a time in a magical forest...",
+                "There lived a curious little rabbit.",
+                "The rabbit loved exploring hidden trails.",
+                "One day, it found a mysterious glowing stone.",
+                "And that was the beginning of an adventure!"
+            ],
+            [
+                "High up in the mountains, a young eagle learned to fly...",
+                "It soared above the clouds, braving the strong winds.",
+                "The eagle discovered hidden valleys and sparkling rivers.",
+                "One day, it met a wise old owl who shared ancient secrets.",
+                "And so, the eagle became a guardian of the skies!"
+            ],
+            [
+                "In the depths of the ocean lived a curious mermaid...",
+                "She collected shimmering pearls from the ocean floor.",
+                "One day, she found a golden key inside a sunken ship.",
+                "The key unlocked a treasure chest filled with wonders.",
+                "Her discovery brought joy to her underwater kingdom."
+            ],
+            [
+                "In a faraway desert, a young camel searched for an oasis...",
+                "It traveled through dunes under the scorching sun.",
+                "At night, the camel marveled at the starry sky.",
+                "Finally, it reached an oasis where all creatures gathered.",
+                "The camel found friendship and peace in the desert."
+            ],
+            [
+                "Deep in the jungle, a mischievous monkey found a magical drum...",
+                "The drum made everyone dance to its beats.",
+                "The monkey shared the drum with animals big and small.",
+                "One day, the drum led them to a hidden paradise.",
+                "The jungle celebrated with joy and harmony."
+            ]
+        ];
+
+        let currentBook = 0;
+        let currentPage = 0;
+
+        const leftPage = document.getElementById('page-1').querySelector('.text');
+        const rightPage = document.getElementById('page-2').querySelector('.text');
+
+        function updatePages() {
+            leftPage.textContent = books[currentBook][currentPage] || "";
+            rightPage.textContent = books[currentBook][currentPage + 1] || "";
+        }
+
+        function flipPage(forward = true) {
+            const leftPageEl = document.getElementById('page-1');
+            const rightPageEl = document.getElementById('page-2');
+
+            if (forward && currentPage < books[currentBook].length - 2) {
+                currentPage += 2;
+                leftPageEl.classList.add('flipping');
+                setTimeout(() => leftPageEl.classList.remove('flipping'), 600);
+            } else if (!forward && currentPage > 0) {
+                currentPage -= 2;
+                rightPageEl.classList.add('flipping');
+                setTimeout(() => rightPageEl.classList.remove('flipping'), 600);
+            }
+            
+
+            playFlipSound();
+            updatePages();
+        }
+
+        function playFlipSound() {
+            const flipSound = new Audio('https://www.soundjay.com/button/sounds/button-29.mp3');
+            flipSound.play();
+        }
+
+        function readAloud() {
+            const text = `${leftPage.textContent} ${rightPage.textContent}`;
+            const utterance = new SpeechSynthesisUtterance(text);
+            speechSynthesis.speak(utterance);
+        }
+
+        nextBtn.addEventListener('click', () => flipPage(true));
+        prevBtn.addEventListener('click', () => flipPage(false));
+        readBtn.addEventListener('click', readAloud);
+
+        updatePages();
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
