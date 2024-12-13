@@ -1,0 +1,36 @@
+{
+    "registered_users": [
+      {
+        "email": "p@p",
+        "password": "p"
+      },
+      {
+        "email": "test",
+        "password": "ujhk"
+      },
+      {
+        "email": "test23",
+        "password": "Female"
+      },
+      {
+        "email": "HIgher",        
+        "password": "Female"
+      },
+      {        
+       "email": "Nikhil",        
+        "password": "Female"
+      },
+      {        
+       "email": "prajakta",      
+        "password": "Female"
+      },
+      {     
+        "email": "praj@p",        
+        "password": "Female"
+      },
+      {       
+        "email": "hi",       
+        "password": "Female"
+      }
+    ]
+  }
